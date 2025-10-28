@@ -53,10 +53,41 @@ pipeline {
             }
         }
         
-        // STAGE 3: Deploy (This will be the next step after ECR)
+        // STAGE 3: Deploy to ECS (Continuous Deployment)
         stage('Deploy to ECS') {
             steps {
-                echo "Deployment stage is placeholder. Next, we will use AWS CLI or a plugin to update the ECS service."
+                withAWS(region: AWS_REGION, credentials: AWS_CREDENTIALS_ID) {
+                    sh """
+                    # Configuration (REPLACE THESE WITH YOUR ACTUAL ECS NAMES)
+                    TASK_DEFINITION_NAME="locastitch-task-def"
+                    CLUSTER_NAME="locastitch-cluster"
+                    SERVICE_NAME="locastitch-service"
+                    
+                    # 1. Get the current active Task Definition ARN
+                    echo "Getting current Task Definition for service \${SERVICE_NAME}..."
+                    CURRENT_TASK_DEF_ARN=\$(aws ecs describe-services --cluster \${CLUSTER_NAME} --services \${SERVICE_NAME} --query "services[0].taskDefinition" --output text)
+                    
+                    # 2. Get the full JSON of the current Task Definition, removing transient fields
+                    echo "Retrieving and cleaning Task Definition JSON..."
+                    TASK_DEF_JSON=\$(aws ecs describe-task-definition --task-definition \${CURRENT_TASK_DEF_ARN} --query "taskDefinition" | jq 'del(.status, .registeredAt, .deregisteredAt, .registeredBy, .compatibilities, .requiresAttributes, .taskDefinitionArn, .revision, .requiresCompatibilities)')
+                    
+                    # 3. Update the image tag in the JSON using jq
+                    echo "Updating image URI to ${IMAGE_URI} in the JSON..."
+                    NEW_TASK_DEF_JSON=\$(echo \${TASK_DEF_JSON} | jq --arg image "${IMAGE_URI}" '.containerDefinitions[0].image = \$image')
+                    
+                    # 4. Register the new Task Definition
+                    echo "Registering a new Task Definition revision..."
+                    NEW_TASK_DEF_ARN=\$(echo \${NEW_TASK_DEF_JSON} | aws ecs register-task-definition --output text --query "taskDefinition.taskDefinitionArn")
+                    
+                    # 5. Update the ECS Service to use the new Task Definition
+                    echo "Updating ECS service \${SERVICE_NAME} to use new Task Definition: \${NEW_TASK_DEF_ARN}"
+                    aws ecs update-service \\
+                        --cluster \${CLUSTER_NAME} \\
+                        --service \${SERVICE_NAME} \\
+                        --task-definition \${NEW_TASK_DEF_ARN} \\
+                        --force-new-deployment
+                    """
+                }
             }
         }
     }
