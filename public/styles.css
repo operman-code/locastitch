@@ -1,0 +1,64 @@
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f1f2f4; /* Light background for the page */
+    color: #333;
+}
+
+/* Header/Navigation */
+.header {
+    background-color: #2874f0; /* Flipkart Blue */
+    color: white;
+    padding: 10px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+/* Hero Section/Banner */
+.hero {
+    background-color: #fff;
+    padding: 50px 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+.hero h2 {
+    color: #2874f0;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+.hero p {
+    font-size: 1.2em;
+    color: #666;
+}
+
+/* Product Grid Placeholder */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns for products */
+    gap: 20px;
+    padding: 0 40px;
+}
+.product-card {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+.product-card h3 {
+    font-size: 1.1em;
+    color: #444;
+    margin-top: 10px;
+}
+.product-card p {
+    font-weight: bold;
+    color: #388e3c; /* Success Green */
+}
