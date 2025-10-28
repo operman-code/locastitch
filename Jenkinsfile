@@ -39,13 +39,16 @@ pipeline {
         // STAGE 2: Push the Image to AWS ECR
         stage('Push to ECR') {
             steps {
-                // Use the ECR Credentials provider to log Docker into the AWS registry
+                // This block uses the AWS Credentials defined in Jenkins
                 withAWS(region: AWS_REGION, credentials: AWS_CREDENTIALS_ID) {
-                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+                    sh """
+                    # 1. Get ECR login token and pipe it to docker login
+                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                     
+                    # 2. Push the image
                     echo "Pushing Docker image: ${IMAGE_URI}"
-                    // Push the built image to ECR
-                    sh "docker push ${IMAGE_URI}"
+                    docker push ${IMAGE_URI}
+                    """
                 }
             }
         }
