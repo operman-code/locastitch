@@ -75,9 +75,13 @@ pipeline {
                     echo "Updating image URI to ${IMAGE_URI} in the JSON..."
                     NEW_TASK_DEF_JSON=\$(echo \${TASK_DEF_JSON} | jq --arg image "${IMAGE_URI}" '.containerDefinitions[0].image = \$image')
                     
-                    # 4. Register the new Task Definition
-                    echo "Registering a new Task Definition revision..."
-                    NEW_TASK_DEF_ARN=\$(echo \${NEW_TASK_DEF_JSON} | aws ecs register-task-definition --output text --query "taskDefinition.taskDefinitionArn")
+                    # *** FIX HERE: Write JSON to a temporary file before registering ***
+                    echo "Writing new Task Definition JSON to temporary file..."
+                    echo \${NEW_TASK_DEF_JSON} > new-task-definition.json
+                    
+                    # 4. Register the new Task Definition using the temporary file
+                    echo "Registering a new Task Definition revision using file input..."
+                    NEW_TASK_DEF_ARN=\$(aws ecs register-task-definition --cli-input-json file://new-task-definition.json --output text --query "taskDefinition.taskDefinitionArn")
                     
                     # 5. Update the ECS Service to use the new Task Definition
                     echo "Updating ECS service \${SERVICE_NAME} to use new Task Definition: \${NEW_TASK_DEF_ARN}"
